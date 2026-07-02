@@ -1,19 +1,23 @@
-import Navbar from "./components/layout/Navbar";
-import Hero from "./components/home/Hero";
-import FeaturedArtwork from "./components/home/FeaturedArtwork";
+import { Routes, Route } from "react-router-dom";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Navigation */}
-      <Navbar />
+    <Routes>
 
-      {/* Main Content */}
-      <main>
-        <Hero />
-        <FeaturedArtwork />
-      </main>
-    </div>
+      <Route path="/" element={<Home />} />
+
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/register" element={<Register />} />
+
+      <Route path="/dashboard" element={<Dashboard />} />
+
+    </Routes>
   );
 }
 
