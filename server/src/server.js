@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+require("./models/User");
+require("./models/Media");
+
 const app = require("./app");
 const sequelize = require("./config/database");
 
@@ -17,4 +20,3 @@ sequelize
   .catch((err) => {
     console.error(err);
   });
-  

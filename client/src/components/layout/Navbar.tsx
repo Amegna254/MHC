@@ -23,6 +23,10 @@ export default function Navbar() {
             Gallery
           </Link>
 
+          <Link to="/upload" className="hover:text-cyan-400 transition">
+            Upload
+          </Link>
+
           <Link to="/portfolio" className="hover:text-cyan-400 transition">
             Portfolio
           </Link>

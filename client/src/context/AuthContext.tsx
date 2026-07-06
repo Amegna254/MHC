@@ -11,9 +11,10 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
+  token: string |null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>(
@@ -47,6 +48,11 @@ export function AuthProvider({ children }: Props) {
     setUser(user);
   };
 
+  const updateUser = (updatedUser: User) => {
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -62,6 +68,7 @@ export function AuthProvider({ children }: Props) {
         token,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}
