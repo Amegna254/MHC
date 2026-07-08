@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
 const User = require("../models/User");
+const sendEmail = require("../utils/sendEmail");
 
 // ======================
 // REGISTER USER
@@ -9,7 +12,6 @@ exports.register = async (req, res) => {
   try {
     const { fullName, username, email, password, role } = req.body;
 
-    // Check if email already exists
     const existingEmail = await User.findOne({
       where: { email },
     });
@@ -20,7 +22,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Check if username already exists
     const existingUsername = await User.findOne({
       where: { username },
     });
@@ -31,10 +32,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await User.create({
       fullName,
       username,
@@ -43,7 +42,6 @@ exports.register = async (req, res) => {
       role: role || "user",
     });
 
-    // Generate JWT
     const token = jwt.sign(
       {
         id: user.id,
@@ -55,7 +53,6 @@ exports.register = async (req, res) => {
       }
     );
 
-    // Send safe user object (no password)
     res.status(201).json({
       message: "User registered successfully",
       token,
@@ -69,6 +66,7 @@ exports.register = async (req, res) => {
         createdAt: user.createdAt,
       },
     });
+
   } catch (error) {
     console.error("REGISTER ERROR:", error);
 
@@ -85,7 +83,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
     const user = await User.findOne({
       where: { email },
     });
@@ -96,8 +93,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Compare password
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!validPassword) {
       return res.status(400).json({
@@ -105,7 +104,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       {
         id: user.id,
@@ -117,7 +115,6 @@ exports.login = async (req, res) => {
       }
     );
 
-    // Send safe user object (no password)
     res.json({
       message: "Login successful",
       token,
@@ -131,8 +128,159 @@ exports.login = async (req, res) => {
         createdAt: user.createdAt,
       },
     });
+
   } catch (error) {
     console.error("LOGIN ERROR:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+// ======================
+// CHANGE PASSWORD
+// ======================
+exports.changePassword = async (req, res) => {
+  try {
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required.",
+      });
+    }
+
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found.",
+      });
+    }
+
+    const validPassword = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!validPassword) {
+      return res.status(400).json({
+        message: "Current password is incorrect.",
+      });
+    }
+
+    const samePassword = await bcrypt.compare(
+      newPassword,
+      user.password
+    );
+
+    if (samePassword) {
+      return res.status(400).json({
+        message:
+          "New password must be different from the current password.",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message:
+          "New password must be at least 8 characters long.",
+      });
+    }
+
+    user.password = await bcrypt.hash(
+      newPassword,
+      10
+    );
+
+    await user.save();
+
+    res.json({
+      message: "Password changed successfully.",
+    });
+
+  } catch (error) {
+
+    console.error(
+      "CHANGE PASSWORD ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+// ======================
+// FORGOT PASSWORD
+// ======================
+exports.forgotPassword = async (req, res) => {
+  try {
+
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "No account found with that email.",
+      });
+    }
+
+    const resetToken = crypto
+      .randomBytes(32)
+      .toString("hex");
+
+    user.passwordResetToken = resetToken;
+
+    user.passwordResetExpires = new Date(
+      Date.now() + 30 * 60 * 1000
+    );
+
+    await user.save();
+
+    const resetURL =
+      `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "MHC Password Reset",
+      html: `
+        <h2>Password Reset</h2>
+
+        <p>Hello ${user.fullName},</p>
+
+        <p>You requested to reset your password.</p>
+
+        <p>
+          <a href="${resetURL}">
+            Reset Password
+          </a>
+        </p>
+
+        <p>This link expires in 30 minutes.</p>
+
+        <p>If you didn't request this email,
+        simply ignore it.</p>
+      `,
+    });
+
+    res.json({
+      message:
+        "Password reset email sent successfully.",
+    });
+
+  } catch (error) {
+
+    console.error(
+      "FORGOT PASSWORD ERROR:",
+      error
+    );
 
     res.status(500).json({
       message: "Server error",

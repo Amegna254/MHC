@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
 import { useAuth } from "../hooks/useAuth";
+import { changePassword } from "../services/authService";
+import { toast } from "sonner";
 import {
   getProfile,
   updateProfile,
@@ -16,6 +18,10 @@ function Profile() {
   const [email, setEmail] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -55,10 +61,10 @@ function Profile() {
         });
       }
 
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     } catch (error) {
       console.error(error);
-      alert("Failed to update profile");
+      toast.error("Failed to update profile");
     }
   };
 
@@ -82,12 +88,56 @@ function Profile() {
         });
       }
 
-      alert("Avatar updated successfully!");
+      toast.success("Avatar updated successfully!");
     } catch (error) {
       console.error(error);
-      alert("Avatar upload failed");
+      toast.error("Avatar upload failed");
     }
   };
+  const handleChangePassword = async (
+  e: React.FormEvent
+) => {
+  e.preventDefault();
+
+  if (
+    !currentPassword ||
+    !newPassword ||
+    !confirmPassword
+  ) {
+    return toast.error("Please fill in all password fields.");
+  }
+
+  if (newPassword !== confirmPassword) {
+    return toast.error("New passwords do not match.");
+  }
+
+  if (newPassword.length < 8) {
+    return toast.error("Password must be at least 8 characters.");
+  }
+
+  try {
+    setChangingPassword(true);
+
+    await changePassword({
+      currentPassword,
+      newPassword,
+    });
+
+    toast.success("Password changed successfully!");
+
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+  } catch (error: any) {
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to change password."
+    );
+  } finally {
+    setChangingPassword(false);
+  }
+};
 
   if (loading) {
     return (
@@ -98,102 +148,162 @@ function Profile() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
-      <Sidebar />
+  <div className="flex min-h-screen bg-slate-950 text-white">
+    <Sidebar />
 
-      <main className="flex-1 p-8">
-        <Topbar />
+    <main className="flex-1 p-8 overflow-y-auto">
+      <Topbar />
 
-        <div className="max-w-3xl mx-auto mt-10">
-          <div className="bg-slate-900 rounded-2xl p-8 shadow-lg">
-            <div className="flex flex-col items-center">
-              <img
-                src={
-                  profileImage
-                    ? `http://localhost:5000/uploads/avatars/${profileImage}`
-                    : "/default-avatar.png"
-                }
-                alt="Profile"
-                className="w-36 h-36 rounded-full border-4 border-cyan-500 object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/default-avatar.png";
-                }}
+      <div className="max-w-3xl mx-auto mt-10">
+        <div className="bg-slate-900 rounded-2xl p-8 shadow-lg">
+          {/* Profile Header */}
+          <div className="flex flex-col items-center">
+            <img
+              src={
+                profileImage
+                  ? `http://localhost:5000/uploads/avatars/${profileImage}`
+                  : "/default-avatar.png"
+              }
+              alt="Profile"
+              className="w-36 h-36 rounded-full border-4 border-cyan-500 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "/default-avatar.png";
+              }}
+            />
+
+            <label className="mt-5 cursor-pointer bg-cyan-500 hover:bg-cyan-600 px-5 py-2 rounded-lg transition">
+              Change Photo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
               />
+            </label>
 
-              <label className="mt-5 cursor-pointer bg-cyan-500 hover:bg-cyan-600 px-5 py-2 rounded-lg transition">
-                Change Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                />
+            <h2 className="text-3xl font-bold mt-6">
+              {fullName}
+            </h2>
+
+            <p className="text-slate-400">
+              @{username}
+            </p>
+          </div>
+
+          {/* Profile Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="mt-10 space-y-6"
+          >
+            <div>
+              <label className="block mb-2">
+                Full Name
               </label>
 
-              <h2 className="text-3xl font-bold mt-6">
-                {fullName}
-              </h2>
-
-              <p className="text-slate-400">
-                @{username}
-              </p>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) =>
+                  setFullName(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="mt-10 space-y-6"
+            <div>
+              <label className="block mb-2">
+                Username
+              </label>
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2">
+                Email
+              </label>
+
+              <input
+                type="email"
+                value={email}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition"
             >
-              <div>
-                <label className="block mb-2">
-                  Full Name
-                </label>
+              Save Changes
+            </button>
+          </form>
 
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-                />
-              </div>
+          {/* Security Section */}
+          <div className="mt-10 border-t border-slate-700 pt-8">
+            <h2 className="text-2xl font-bold mb-6">
+              Change Password
+            </h2>
 
-              <div>
-                <label className="block mb-2">
-                  Username
-                </label>
+            <form
+              onSubmit={handleChangePassword}
+              className="space-y-5"
+            >
+              <input
+                type="password"
+                placeholder="Current Password"
+                value={currentPassword}
+                onChange={(e) =>
+                  setCurrentPassword(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
 
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) =>
+                  setNewPassword(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
 
-              <div>
-                <label className="block mb-2">
-                  Email
-                </label>
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) =>
+                  setConfirmPassword(e.target.value)
+                }
+                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+              />
 
               <button
                 type="submit"
-                className="w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition"
+                disabled={changingPassword}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg font-semibold transition disabled:opacity-50"
               >
-                Save Changes
+                {changingPassword
+                  ? "Changing Password..."
+                  : "Change Password"}
               </button>
             </form>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  </div>
+);
 }
 
 export default Profile;

@@ -30,6 +30,17 @@ const User = sequelize.define("User", {
     allowNull: false,
   },
 
+  // Password Reset
+  passwordResetToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  passwordResetExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+
   role: {
     type: DataTypes.STRING,
     defaultValue: "user",
@@ -39,6 +50,8 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     defaultValue: "",
   },
+}, {
+  timestamps: true,
 });
 
 module.exports = User;
