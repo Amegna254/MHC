@@ -10,6 +10,8 @@ import {
   uploadAvatar,
 } from "../services/userService";
 
+// Minimalistic profile UI: split layout with avatar on left and form on right.
+
 function Profile() {
   const { user, updateUser } = useAuth();
 
@@ -22,6 +24,7 @@ function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -148,162 +151,157 @@ function Profile() {
   }
 
   return (
-  <div className="flex min-h-screen bg-slate-950 text-white">
-    <Sidebar />
+    <div className="flex min-h-screen bg-slate-950 text-white">
+      <Sidebar />
 
-    <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-8 overflow-y-auto">
       <Topbar />
 
-      <div className="max-w-3xl mx-auto mt-10">
-        <div className="bg-slate-900 rounded-2xl p-8 shadow-lg">
-          {/* Profile Header */}
-          <div className="flex flex-col items-center">
-            <img
-              src={
-                profileImage
-                  ? `http://localhost:5000/uploads/avatars/${profileImage}`
-                  : "/default-avatar.png"
-              }
-              alt="Profile"
-              className="w-36 h-36 rounded-full border-4 border-cyan-500 object-cover"
-              onError={(e) => {
-                e.currentTarget.src = "/default-avatar.png";
-              }}
-            />
+        <div className="max-w-4xl mx-auto mt-10">
+          <div className="bg-slate-900 rounded-2xl p-6 shadow-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+              {/* Left: Avatar & basic info */}
+              <div className="flex flex-col items-center md:items-start">
+                <img
+                  src={
+                    profileImage
+                      ? `http://localhost:5000/uploads/avatars/${profileImage}`
+                      : "/default-avatar.png"
+                  }
+                  alt="Profile"
+                  className="w-28 h-28 rounded-full border-2 border-cyan-500 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "/default-avatar.png";
+                  }}
+                />
 
-            <label className="mt-5 cursor-pointer bg-cyan-500 hover:bg-cyan-600 px-5 py-2 rounded-lg transition">
-              Change Photo
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-              />
-            </label>
+                <label className="mt-4 cursor-pointer bg-cyan-500 hover:bg-cyan-600 px-4 py-2 rounded-md text-sm transition">
+                  Change Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </label>
 
-            <h2 className="text-3xl font-bold mt-6">
-              {fullName}
-            </h2>
+                <h2 className="text-xl font-semibold mt-4">
+                  {fullName}
+                </h2>
 
-            <p className="text-slate-400">
-              @{username}
-            </p>
-          </div>
+                <p className="text-slate-400 text-sm">
+                  @{username}
+                </p>
+              </div>
 
-          {/* Profile Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="mt-10 space-y-6"
-          >
-            <div>
-              <label className="block mb-2">
-                Full Name
-              </label>
+              {/* Right: Form */}
+              <div className="md:col-span-2">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-1 text-sm text-slate-300">Full Name</label>
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+                      />
+                    </div>
 
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) =>
-                  setFullName(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
+                    <div>
+                      <label className="block mb-1 text-sm text-slate-300">Username</label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-sm text-slate-300">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      className="bg-cyan-500 hover:bg-cyan-600 py-2 px-4 rounded-md font-medium transition"
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordForm((s) => !s)}
+                      className="bg-transparent border border-slate-700 hover:bg-slate-800 py-2 px-4 rounded-md transition text-sm"
+                    >
+                      {showPasswordForm ? "Hide Password" : "Change Password"}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Collapsible password form */}
+                {showPasswordForm && (
+                  <div className="mt-4 bg-slate-800 p-4 rounded-lg">
+                    <form onSubmit={handleChangePassword} className="space-y-3">
+                      <input
+                        type="password"
+                        placeholder="Current Password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700"
+                      />
+
+                      <input
+                        type="password"
+                        placeholder="New Password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700"
+                      />
+
+                      <input
+                        type="password"
+                        placeholder="Confirm New Password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700"
+                      />
+
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={changingPassword}
+                          className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded-md font-medium transition disabled:opacity-50"
+                        >
+                          {changingPassword ? "Changing..." : "Update Password"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordForm(false)}
+                          className="bg-transparent border border-slate-700 hover:bg-slate-800 py-2 px-4 rounded-md transition text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
-
-            <div>
-              <label className="block mb-2">
-                Username
-              </label>
-
-              <input
-                type="text"
-                value={username}
-                onChange={(e) =>
-                  setUsername(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2">
-                Email
-              </label>
-
-              <input
-                type="email"
-                value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition"
-            >
-              Save Changes
-            </button>
-          </form>
-
-          {/* Security Section */}
-          <div className="mt-10 border-t border-slate-700 pt-8">
-            <h2 className="text-2xl font-bold mb-6">
-              Change Password
-            </h2>
-
-            <form
-              onSubmit={handleChangePassword}
-              className="space-y-5"
-            >
-              <input
-                type="password"
-                placeholder="Current Password"
-                value={currentPassword}
-                onChange={(e) =>
-                  setCurrentPassword(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
-
-              <input
-                type="password"
-                placeholder="New Password"
-                value={newPassword}
-                onChange={(e) =>
-                  setNewPassword(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
-
-              <input
-                type="password"
-                placeholder="Confirm New Password"
-                value={confirmPassword}
-                onChange={(e) =>
-                  setConfirmPassword(e.target.value)
-                }
-                className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700"
-              />
-
-              <button
-                type="submit"
-                disabled={changingPassword}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg font-semibold transition disabled:opacity-50"
-              >
-                {changingPassword
-                  ? "Changing Password..."
-                  : "Change Password"}
-              </button>
-            </form>
           </div>
         </div>
-      </div>
-    </main>
-  </div>
-);
+      </main>
+    </div>
+  );
 }
 
 export default Profile;

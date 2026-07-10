@@ -7,20 +7,23 @@ import App from "./App";
 import "./index.css";
 
 import { AuthProvider } from "./context/AuthContext";
+import { MarketplaceProvider } from "./context/MarketplaceContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <MarketplaceProvider>
+          <App />
 
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          expand={true}
-          duration={3000}
-        />
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            expand={true}
+            duration={3000}
+          />
+        </MarketplaceProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

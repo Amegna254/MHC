@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
 import StatCard from "../components/dashboard/StatCard";
-import QuickActions from "../components/dashboard/QuickActions";
-import RecentUploads from "../components/dashboard/RecentUploads";
 import { getDashboard } from "../services/dashboardService";
+import { useMarketplace } from "../context/MarketplaceContext";
 
 interface DashboardData {
   user: {
@@ -24,6 +23,7 @@ interface DashboardData {
 }
 
 function Dashboard() {
+  const { marketplaceItems } = useMarketplace();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,22 +62,18 @@ function Dashboard() {
 
         <Topbar />
 
-        <div className="mt-8 mb-10">
-  <h1 className="text-4xl font-bold">
-    Dashboard Overview
-  </h1>
-
-  <p className="text-slate-400 mt-3 text-lg">
-    Welcome back,
-    <span className="text-cyan-400 font-semibold">
-      {" "}{dashboard?.user.fullName}
-    </span>
-  </p>
-
-  <p className="text-slate-500 mt-2">
-    Manage your uploads and monitor your activity.
-  </p>
-</div>
+        <div className="mt-4 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+            <p className="text-slate-400 text-sm mt-1">{dashboard?.user.fullName}</p>
+          </div>
+          <a
+            href="/marketplace"
+            className="inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-cyan-400"
+          >
+            Browse Marketplace
+          </a>
+        </div>
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
 
@@ -103,16 +99,38 @@ function Dashboard() {
 
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-10">
-          <QuickActions />
-        </div>
+        {/* Minimal dashboard: hide quick actions and recent uploads for clarity */}
 
-        {/* Recent Uploads */}
-        <div className="mt-10">
-          <RecentUploads uploads={dashboard?.recentUploads ?? []} />
-        </div>
+        <section className="mt-12 rounded-3xl bg-slate-900 p-8 shadow-xl shadow-black/20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold">Recent Marketplace Listings</h2>
+              <p className="text-slate-400">Your latest marketplace uploads and created items.</p>
+            </div>
+            <div className="text-sm text-slate-400">
+              {marketplaceItems.length} total listings
+            </div>
+          </div>
 
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {marketplaceItems.slice(0, 4).map((item) => (
+              <div key={item.id} className="rounded-3xl border border-slate-800 bg-slate-950/80 p-4">
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>{item.category}</span>
+                  <span>❤️ {item.likes}</span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-white">{item.title}</h3>
+                <p className="mt-2 text-slate-400">{item.creator}</p>
+                <div className="mt-4 flex items-center justify-between text-white">
+                  <span className="font-semibold">{item.price}</span>
+                  <span className="rounded-full bg-slate-900 px-3 py-1 text-xs uppercase tracking-[0.2em] text-slate-300">
+                    {item.rating.toFixed(1)} ⭐
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
 
     </div>

@@ -219,7 +219,6 @@ exports.changePassword = async (req, res) => {
 // ======================
 exports.forgotPassword = async (req, res) => {
   try {
-
     const { email } = req.body;
 
     const user = await User.findOne({
@@ -243,6 +242,12 @@ exports.forgotPassword = async (req, res) => {
     );
 
     await user.save();
+
+    // 👇 ADD THESE LINES
+    console.log("================================");
+    console.log("Saved reset token:", user.passwordResetToken);
+    console.log("Saved expiry:", user.passwordResetExpires);
+    console.log("================================");
 
     const resetURL =
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
@@ -271,16 +276,66 @@ exports.forgotPassword = async (req, res) => {
     });
 
     res.json({
-      message:
-        "Password reset email sent successfully.",
+      message: "Password reset email sent successfully.",
     });
 
   } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
 
-    console.error(
-      "FORGOT PASSWORD ERROR:",
-      error
-    );
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+// ======================
+// RESET PASSWORD
+// ======================
+exports.resetPassword = async (req, res) => {
+  try {
+    console.log("Token from URL:", req.params.token);
+
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      where: {
+        passwordResetToken: token,
+      },
+    });
+
+    console.log("User found:", !!user);
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid reset token.",
+      });
+    }
+
+    console.log("Expiry:", user.passwordResetExpires);
+    console.log("Current:", new Date());
+
+    if (
+      !user.passwordResetExpires ||
+      user.passwordResetExpires < new Date()
+    ) {
+      return res.status(400).json({
+        message: "Reset token has expired.",
+      });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+
+    await user.save();
+
+    res.json({
+      message: "Password reset successfully.",
+    });
+
+  } catch (error) {
+    console.error(error);
 
     res.status(500).json({
       message: "Server error",

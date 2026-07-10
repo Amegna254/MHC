@@ -22,11 +22,19 @@ exports.getDashboard = async (req, res) => {
       ).length,
     };
 
+    // aggregate engagement metrics for performance overview
+    const totalViews = uploads.reduce((acc, m) => acc + (m.views || 0), 0);
+    const totalLikes = uploads.reduce((acc, m) => acc + (m.likes || 0), 0);
+
     res.json({
       success: true,
       user: req.user,
       stats,
       recentUploads: uploads.slice(0, 5),
+      performance: {
+        totalViews,
+        totalLikes,
+      },
     });
   } catch (error) {
     console.error(error);

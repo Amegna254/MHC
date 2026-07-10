@@ -8,17 +8,21 @@ const authController = require("../controllers/authController");
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 
-// Password Management
+// Password
 router.put(
   "/change-password",
   authMiddleware,
   authController.changePassword
 );
 
-// Forgot Password
 router.post(
   "/forgot-password",
   authController.forgotPassword
+);
+
+router.post(
+  "/reset-password/:token",
+  authController.resetPassword
 );
 
 module.exports = router;

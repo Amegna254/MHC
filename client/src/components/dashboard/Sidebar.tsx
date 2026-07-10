@@ -8,14 +8,25 @@ import {
 } from "react-icons/fa";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useState } from "react";
+import ConfirmModal from "../ConfirmModal";
 
 function Sidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const initiateLogout = () => setShowConfirm(true);
+
   const handleLogout = () => {
+    // perform logout action
     logout();
-    navigate("/login");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setShowConfirm(false);
+    // force full reload to ensure in-memory state is cleared
+    window.location.replace("/login");
   };
 
   return (
@@ -58,13 +69,33 @@ function Sidebar() {
           Profile
         </Link>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 text-red-400 hover:text-red-500 transition"
+        <Link
+          to="/performance"
+          className="flex items-center gap-3 hover:text-cyan-400 transition"
         >
-          <FaSignOutAlt />
-          Logout
-        </button>
+          <FaUser />
+          Performance
+        </Link>
+
+        <>
+          <button
+            onClick={initiateLogout}
+            aria-label="Logout"
+            className="flex items-center gap-3 text-red-400 hover:text-red-500 transition rounded-md px-3 py-2"
+          >
+            <FaSignOutAlt />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+
+          {showConfirm && (
+            <ConfirmModal
+              title="Log out"
+              message="Are you sure you want to log out of your account?"
+              onCancel={() => setShowConfirm(false)}
+              onConfirm={handleLogout}
+            />
+          )}
+        </>
 
       </nav>
     </aside>

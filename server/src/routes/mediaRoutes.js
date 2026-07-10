@@ -12,6 +12,37 @@ router.post(
   mediaController.uploadMedia
 );
 
-router.get("/", mediaController.getAllMedia);
+router.get(
+  "/user",
+  authMiddleware,
+  mediaController.getUserMedia
+);
+
+router.get(
+  "/",
+  mediaController.getAllMedia
+);
+
+router.get(
+  "/:id",
+  mediaController.getMediaById
+);
+
+router.post(
+  "/:id/like",
+  authMiddleware,
+  mediaController.incrementLike
+);
+
+router.post(
+  "/:id/view",
+  mediaController.incrementView
+);
+
+router.post(
+  "/:id/comment",
+  authMiddleware,
+  mediaController.addComment
+);
 
 module.exports = router;

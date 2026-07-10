@@ -1,7 +1,22 @@
 import { useAuth } from "../../hooks/useAuth";
+import { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import BackToDashboard from "../BackToDashboard";
 
 function Topbar() {
   const { user } = useAuth();
+  const [showBack, setShowBack] = useState<boolean>(true);
+
+  useEffect(() => {
+    const val = localStorage.getItem("showBackButton");
+    setShowBack(val === null ? true : val === "true");
+  }, []);
+
+  const toggleShowBack = () => {
+    const next = !showBack;
+    setShowBack(next);
+    localStorage.setItem("showBackButton", String(next));
+  };
 
   return (
     <header className="bg-slate-900 rounded-xl p-6 flex justify-between items-center shadow-lg">
@@ -19,6 +34,19 @@ function Topbar() {
 
       {/* User Info */}
       <div className="flex items-center gap-4">
+
+        {/* Back button toggle & back button */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleShowBack}
+            title={showBack ? "Hide back button" : "Show back button"}
+            className="p-2 rounded hover:bg-slate-800"
+          >
+            {showBack ? <FaEye className="w-4 h-4" /> : <FaEyeSlash className="w-4 h-4" />}
+          </button>
+
+          {showBack && <BackToDashboard />}
+        </div>
 
         <div className="text-right">
           <p className="font-semibold">
