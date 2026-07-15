@@ -9,21 +9,24 @@ const Like = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    mediaId: {
+
+    listingId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
   },
   {
+    tableName: "Likes",
     timestamps: true,
     indexes: [
       {
         unique: true,
-        fields: ["userId", "mediaId"],
+        fields: ["userId", "listingId"],
       },
     ],
   }

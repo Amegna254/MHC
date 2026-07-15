@@ -1,105 +1,136 @@
+const sequelize = require("../config/database");
+
 const User = require("./User");
-const Media = require("./Media");
+const Media = require("./media");
 const Listing = require("./Listing");
 const Like = require("./Like");
-const Comment = require("./Comment");
 const View = require("./View");
+const Comment = require("./Comment");
 const Order = require("./Order");
 
-// Core media ownership
-Media.belongsTo(User, {
-  foreignKey: "uploadedBy",
-  as: "uploader",
-});
+/* ===========================
+   USER ↔ MEDIA
+=========================== */
+
 User.hasMany(Media, {
   foreignKey: "uploadedBy",
+  as: "media",
 });
 
-// Marketplace listing
+Media.belongsTo(User, {
+  foreignKey: "uploadedBy",
+  as: "owner",
+});
+
+/* ===========================
+   MEDIA ↔ LISTING
+=========================== */
+
+Media.hasOne(Listing, {
+  foreignKey: "mediaId",
+  as: "listing",
+});
+
 Listing.belongsTo(Media, {
   foreignKey: "mediaId",
   as: "media",
 });
-Media.hasMany(Listing, {
-  foreignKey: "mediaId",
+
+User.hasMany(Listing, {
+  foreignKey: "sellerId",
+  as: "listings",
 });
 
-// Engagement models
-Like.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
+Listing.belongsTo(User, {
+  foreignKey: "sellerId",
+  as: "seller",
 });
+
+/* ===========================
+   LISTING ↔ LIKES
+=========================== */
+
 User.hasMany(Like, {
   foreignKey: "userId",
 });
-Like.belongsTo(Media, {
-  foreignKey: "mediaId",
-  as: "media",
+
+Like.belongsTo(User, {
+  foreignKey: "userId",
 });
-Media.hasMany(Like, {
-  foreignKey: "mediaId",
+
+Listing.hasMany(Like, {
+  foreignKey: "listingId",
+});
+
+Like.belongsTo(Listing, {
+  foreignKey: "listingId",
+});
+
+/* ===========================
+   LISTING ↔ COMMENTS
+=========================== */
+
+User.hasMany(Comment, {
+  foreignKey: "userId",
 });
 
 Comment.belongsTo(User, {
   foreignKey: "userId",
-  as: "commenter",
-});
-User.hasMany(Comment, {
-  foreignKey: "userId",
-});
-Comment.belongsTo(Media, {
-  foreignKey: "mediaId",
-  as: "media",
-});
-Media.hasMany(Comment, {
-  foreignKey: "mediaId",
 });
 
-View.belongsTo(User, {
-  foreignKey: "userId",
-  as: "viewer",
-});
-User.hasMany(View, {
-  foreignKey: "userId",
-});
-View.belongsTo(Media, {
-  foreignKey: "mediaId",
-  as: "media",
-});
-Media.hasMany(View, {
-  foreignKey: "mediaId",
+Listing.hasMany(Comment, {
+  foreignKey: "listingId",
 });
 
-// Orders
+Comment.belongsTo(Listing, {
+  foreignKey: "listingId",
+});
+
+/* ===========================
+   LISTING ↔ VIEWS
+=========================== */
+
+Listing.hasMany(View, {
+  foreignKey: "listingId",
+});
+
+View.belongsTo(Listing, {
+  foreignKey: "listingId",
+});
+
+/* ===========================
+   LISTING ↔ ORDERS
+=========================== */
+
+User.hasMany(Order, {
+  foreignKey: "buyerId",
+  as: "orders",
+});
+
 Order.belongsTo(User, {
-  foreignKey: "userId",
+  foreignKey: "buyerId",
   as: "buyer",
 });
-User.hasMany(Order, {
-  foreignKey: "userId",
-});
-Order.belongsTo(Media, {
-  foreignKey: "mediaId",
-  as: "media",
-});
-Media.hasMany(Order, {
-  foreignKey: "mediaId",
-});
 
-Order.belongsTo(Listing, {
-  foreignKey: "listingId",
-  as: "listing",
-});
 Listing.hasMany(Order, {
   foreignKey: "listingId",
 });
 
+Order.belongsTo(Listing, {
+  foreignKey: "listingId",
+});
+
+/* ===========================
+   EXPORTS
+=========================== */
+
 module.exports = {
+  sequelize,
   User,
   Media,
   Listing,
   Like,
-  Comment,
   View,
+  Comment,
   Order,
 };

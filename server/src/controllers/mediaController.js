@@ -55,14 +55,17 @@ exports.uploadMedia = async (req, res) => {
     let listing = null;
     if (req.body.createListing !== "false") {
       listing = await Listing.create({
-        mediaId: media.id,
-        price: req.body.price || `KES ${Math.max(100, Math.round((req.file.size || 1000) / 1000) * 100)}`,
-        currency: req.body.currency || "KES",
-        stock: Number(req.body.stock ?? 1),
-        licenseType: req.body.licenseType || "standard",
-        isForSale: req.body.isForSale !== "false",
-        status: req.body.listingStatus || "active",
-      });
+  mediaId: media.id,
+  sellerId: req.user.id,
+  title: media.title,
+
+  price: req.body.price || Math.max(100, Math.round((req.file.size || 1000) / 1000) * 100),
+  currency: req.body.currency || "KES",
+  stock: Number(req.body.stock ?? 1),
+  licenseType: req.body.licenseType || "standard",
+  isForSale: req.body.isForSale !== "false",
+  status: req.body.listingStatus || "active",
+});
     }
 
     res.status(201).json({
@@ -162,7 +165,7 @@ exports.getMediaById = async (req, res) => {
           include: [
             {
               model: User,
-              as: "uploader",
+              as: "owner",
               attributes: ["id", "fullName", "username", "profileImage"],
             },
           ],
@@ -201,13 +204,13 @@ exports.getMediaById = async (req, res) => {
       isForSale: listing.isForSale,
       category: mediaItem.category,
       image: getImageUrl(mediaItem.filePath, req),
-      creator: mediaItem.uploader?.fullName || mediaItem.uploader?.username || "Creator",
-      creatorSlug: mediaItem.uploader
-        ? String(mediaItem.uploader.username || mediaItem.uploader.fullName)
+      creator: mediaItem.owner?.fullName || mediaItem.owner?.username || "Creator",
+      creatorSlug: mediaItem.owner
+        ? String(mediaItem.owner.username || mediaItem.owner.fullName)
             .toLowerCase()
             .replace(/\s+/g, "-")
         : "creator",
-      creatorProfileImage: mediaItem.uploader?.profileImage || null,
+      creatorProfileImage: mediaItem.owner?.profileImage || null,
       views,
       likes,
       comments,
@@ -251,7 +254,7 @@ exports.getAllMedia = async (req, res) => {
           include: [
             {
               model: User,
-              as: "uploader",
+              as: "owner",
               attributes: ["id", "fullName", "username", "profileImage"],
             },
           ],
@@ -267,9 +270,9 @@ exports.getAllMedia = async (req, res) => {
         const categorySlug = mediaItem.category
           ? mediaItem.category.toLowerCase().replace(/\s+/g, "-")
           : mapCategory(mediaItem.fileType).categorySlug;
-        const creatorName = mediaItem.uploader?.fullName || mediaItem.uploader?.username || "Creator";
-        const creatorSlug = mediaItem.uploader
-          ? String(mediaItem.uploader.username || creatorName)
+        const creatorName = mediaItem.owner?.fullName || mediaItem.owner?.username || "Creator";
+        const creatorSlug = mediaItem.owner
+          ? String(mediaItem.owner.username || creatorName)
               .toLowerCase()
               .replace(/\s+/g, "-")
           : "creator";
@@ -292,7 +295,7 @@ exports.getAllMedia = async (req, res) => {
           image: getImageUrl(mediaItem.filePath, req),
           creator: creatorName,
           creatorSlug,
-          creatorProfileImage: mediaItem.uploader?.profileImage || null,
+          creatorProfileImage: mediaItem.owner?.profileImage || null,
           uploadedBy: mediaItem.uploadedBy,
           views,
           likes,

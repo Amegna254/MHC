@@ -3,8 +3,12 @@ import { useAuth } from "../../hooks/useAuth";
 
 export default function Navbar() {
   const { user, token } = useAuth();
-  const hasToken = Boolean(token && token !== "null" && token !== "undefined");
-  const isAuthenticated = Boolean(user && hasToken);
+
+  const isAuthenticated =
+    !!user &&
+    !!token &&
+    token !== "null" &&
+    token !== "undefined";
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur border-b border-slate-800 z-50">
@@ -18,50 +22,58 @@ export default function Navbar() {
           MHC
         </Link>
 
-        {/* Navigation Links */}
+        {/* Public Navigation */}
         <div className="hidden md:flex gap-8 text-white">
-          <Link to="/" className="hover:text-cyan-400 transition">
+
+          <Link
+            to="/"
+            className="hover:text-cyan-400 transition"
+          >
             Home
           </Link>
 
-          <Link to="/marketplace" className="hover:text-cyan-400 transition">
+          <Link
+            to="/marketplace"
+            className="hover:text-cyan-400 transition"
+          >
             Marketplace
           </Link>
 
-          {isAuthenticated && (
-            <>
-              <Link to="/gallery" className="hover:text-cyan-400 transition">
-                Gallery
-              </Link>
-
-              <Link to="/upload" className="hover:text-cyan-400 transition">
-                Upload
-              </Link>
-            </>
-          )}
-
-          <Link to="/portfolio" className="hover:text-cyan-400 transition">
-            Portfolio
-          </Link>
-
-          <Link to="/about" className="hover:text-cyan-400 transition">
+          <Link
+            to="/about"
+            className="hover:text-cyan-400 transition"
+          >
             About
           </Link>
 
-          <Link to="/contact" className="hover:text-cyan-400 transition">
+          <Link
+            to="/contact"
+            className="hover:text-cyan-400 transition"
+          >
             Contact
           </Link>
+
         </div>
 
-        {/* Authentication Buttons */}
+        {/* Right Side */}
         <div className="flex gap-3">
-          {hasToken ? (
-            <Link
-              to="/profile"
-              className="px-5 py-2 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition"
-            >
-              Profile
-            </Link>
+
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="px-5 py-2 rounded-lg border border-cyan-500 text-white hover:bg-cyan-500/20 transition"
+              >
+                Dashboard
+              </Link>
+
+              <Link
+                to="/profile"
+                className="px-5 py-2 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition"
+              >
+                Profile
+              </Link>
+            </>
           ) : (
             <>
               <Link
@@ -79,6 +91,7 @@ export default function Navbar() {
               </Link>
             </>
           )}
+
         </div>
       </div>
     </nav>

@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const User = require("./User");
 
 const Media = sequelize.define(
   "Media",
@@ -32,7 +31,13 @@ const Media = sequelize.define(
     },
 
     fileType: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM(
+        "image",
+        "video",
+        "audio",
+        "document",
+        "other"
+      ),
       allowNull: false,
     },
 
@@ -55,22 +60,28 @@ const Media = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+
     category: {
       type: DataTypes.STRING,
-      allowNull: true,
+      defaultValue: "General",
     },
+
     visibility: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM("public", "private"),
       defaultValue: "public",
     },
+
     status: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM(
+        "draft",
+        "published",
+        "archived"
+      ),
       defaultValue: "published",
     },
   },
   {
+    tableName: "Media",
     timestamps: true,
   }
 );

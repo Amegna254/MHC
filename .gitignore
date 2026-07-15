@@ -22,3 +22,5 @@ Thumbs.db
 
 # VS Code
 .vscode/
+src/uploads/
+src/uploads/avatars/

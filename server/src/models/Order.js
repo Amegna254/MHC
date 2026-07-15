@@ -9,47 +9,56 @@ const Order = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    userId: {
+
+    buyerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    mediaId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
+
     listingId: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    amount: {
-      type: DataTypes.STRING,
       allowNull: false,
     },
+
+    amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+
     currency: {
       type: DataTypes.STRING,
-      allowNull: false,
       defaultValue: "KES",
     },
+
     paymentMethod: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM(
+        "mpesa",
+        "card",
+        "paypal"
+      ),
       defaultValue: "mpesa",
     },
+
     paymentReference: {
       type: DataTypes.STRING,
-      allowNull: true,
     },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "pending",
-    },
+
     mpesaReceipt: {
       type: DataTypes.STRING,
-      allowNull: true,
+    },
+
+    status: {
+      type: DataTypes.ENUM(
+        "pending",
+        "paid",
+        "cancelled",
+        "refunded"
+      ),
+      defaultValue: "pending",
     },
   },
   {
+    tableName: "Orders",
     timestamps: true,
   }
 );

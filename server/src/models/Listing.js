@@ -9,42 +9,71 @@ const Listing = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+
     mediaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    price: {
+
+    sellerId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    title: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "KES 0",
     },
+
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0.00,
+    },
+
     currency: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: "KES",
     },
+
     stock: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
     },
+
     licenseType: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM(
+        "standard",
+        "extended",
+        "exclusive"
+      ),
       defaultValue: "standard",
     },
+
     isForSale: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: true,
     },
+
     status: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.ENUM(
+        "draft",
+        "active",
+        "sold",
+        "archived"
+      ),
       defaultValue: "active",
     },
+
+    featured: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    }
   },
   {
+    tableName: "Listings",
     timestamps: true,
   }
 );

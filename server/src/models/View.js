@@ -9,21 +9,24 @@ const View = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+
     userId: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    mediaId: {
+
+    listingId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+
     viewedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   },
   {
+    tableName: "Views",
     timestamps: false,
   }
 );

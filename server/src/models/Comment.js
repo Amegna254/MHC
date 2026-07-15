@@ -9,20 +9,24 @@ const Comment = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    mediaId: {
+
+    listingId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
   },
   {
+    tableName: "Comments",
     timestamps: true,
   }
 );
