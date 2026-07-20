@@ -4,7 +4,24 @@ import { getListingById, incrementView, likeItem, addComment } from "../services
 
 export default function ListingDetail() {
   const { itemId } = useParams();
-  const [item, setItem] = useState<any>(null);
+  interface Listing {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  fileType: string;
+  mimeType: string;
+  category: string;
+  creator: string;
+  creatorSlug: string;
+  price: string;
+  rating: number;
+  likes: number;
+  views: number;
+  comments: any[];
+}
+
+const [item, setItem] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [views, setViews] = useState<number>(0);
@@ -16,6 +33,12 @@ export default function ListingDetail() {
       try {
         if (!itemId) return;
         const listing = await getListingById(itemId);
+        console.log("Listing:", listing);
+        console.log("File Type:", listing.fileType);
+        console.log("File URL:", listing.image);
+        console.log("Mime Type:", listing.mimeType);
+
+
         setItem(listing);
         setViews(listing.views || 0);
         setComments(listing.comments || []);
@@ -94,8 +117,48 @@ export default function ListingDetail() {
         <div className="rounded-3xl bg-slate-900 p-8 shadow-xl shadow-black/20">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="rounded-3xl overflow-hidden bg-slate-950/80">
-              <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-            </div>
+     {item.fileType === "image" && (
+    <img
+      src={item.image}
+      alt={item.title}
+      className="h-full w-full object-cover"
+    />
+  )}
+
+  {item.fileType === "video" && (
+    <video
+      controls
+      className="w-full h-full bg-black"
+    >
+      <source
+        src={item.image}
+        type={item.mimeType}
+      />
+      Your browser does not support video playback.
+    </video>
+  )}
+
+  {item.fileType === "audio" && (
+    <div className="flex items-center justify-center min-h-[400px] p-8">
+      <audio controls className="w-full">
+        <source
+          src={item.image}
+          type={item.mimeType}
+        />
+        Your browser does not support audio.
+      </audio>
+    </div>
+  )}
+
+  {item.fileType === "document" && (
+    <iframe
+      src={item.image}
+      title={item.title}
+      className="w-full h-[700px] bg-white"
+    />
+  )}
+
+</div>
 
             <div className="space-y-6">
               <div>
@@ -141,20 +204,24 @@ export default function ListingDetail() {
                   Purchase Now
                 </button>
                 <button
-                  onClick={async () => {
-                    if (liked || !item.id) return;
-                    try {
-                      const res = await likeItem(item.id);
-                      setLiked(true);
-                      setItem((prev: any) => ({ ...prev, likes: res.likes }));
-                    } catch (err) {
-                      // ignore
-                    }
-                  }}
-                  className="w-full rounded-2xl border border-slate-800 px-5 py-4 text-sm font-semibold text-cyan-300 hover:border-cyan-500 hover:text-white transition text-center"
-                >
-                  {liked ? "Liked" : "Like"}
-                </button>
+  onClick={async () => {
+    try {
+      const res = await likeItem(item.id);
+
+      setLiked(res.liked);
+
+      setItem((prev: any) => ({
+        ...prev,
+        likes: res.likes,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  }}
+  className="w-full rounded-2xl border border-slate-800 px-5 py-4 text-sm font-semibold text-cyan-300 hover:border-cyan-500 hover:text-white transition text-center"
+>
+  {liked ? "❤️ Liked" : "🤍 Like"}
+</button>
                 <Link
                   to={`/creator/${item.creatorSlug}`}
                   className="w-full rounded-2xl border border-slate-800 px-5 py-4 text-sm font-semibold text-cyan-300 hover:border-cyan-500 hover:text-white transition text-center"

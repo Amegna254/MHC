@@ -5,8 +5,9 @@ const authRoutes = require("./routes/authRoutes");
 const mediaRoutes = require("./routes/mediaRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-
+const creatorRoutes = require("./routes/creatorRoutes");
 const app = express();
+const followRoutes = require("./routes/followRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +20,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/creators", creatorRoutes);
+app.use("/api/follows", followRoutes);
 
 app.get("/", (req, res) => {
   res.json({

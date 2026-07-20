@@ -7,6 +7,8 @@ export interface MarketplaceItem {
   mediaId?: number | string;
   title: string;
   creator: string;
+  fileType: string;
+  mimeType: string;
   creatorSlug: string;
   price: string;
   rating: number;

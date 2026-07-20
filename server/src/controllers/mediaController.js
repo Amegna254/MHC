@@ -1,10 +1,11 @@
-const Media = require("../models/Media");
-const Listing = require("../models/Listing");
-const Like = require("../models/Like");
-const Comment = require("../models/Comment");
-const View = require("../models/View");
-const User = require("../models/User");
-
+const {
+  Media,
+  Listing,
+  Like,
+  Comment,
+  View,
+  User,
+} = require("../models");
 const mapCategory = (fileType) => {
   switch (fileType) {
     case "image":
@@ -34,7 +35,26 @@ exports.uploadMedia = async (req, res) => {
       });
     }
 
-    const fileType = req.file.mimetype.split("/")[0];
+    const mime = req.file.mimetype;
+
+let fileType = "other";
+
+if (mime.startsWith("image/")) {
+  fileType = "image";
+} else if (mime.startsWith("video/")) {
+  fileType = "video";
+} else if (mime.startsWith("audio/")) {
+  fileType = "audio";
+} else if (
+  mime.includes("pdf") ||
+  mime.includes("word") ||
+  mime.includes("text") ||
+  mime.includes("excel") ||
+  mime.includes("sheet") ||
+  mime.includes("presentation")
+) {
+  fileType = "document";
+}
     const category = req.body.category || mapCategory(fileType).category;
 
     const media = await Media.create({
@@ -93,13 +113,17 @@ exports.incrementView = async (req, res) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
-    await View.create({
-      mediaId: listing.mediaId,
-      userId: req.user ? req.user.id : null,
-      viewedAt: new Date(),
-    });
+await View.create({
+  listingId: listing.id,
+  userId: req.user ? req.user.id : null,
+  viewedAt: new Date(),
+});
 
-    const totalViews = await View.count({ where: { mediaId: listing.mediaId } });
+const totalViews = await View.count({
+  where: {
+    listingId: listing.id,
+  },
+});
     res.json({ id: listing.id, views: totalViews });
   } catch (error) {
     console.error(error);
@@ -110,47 +134,91 @@ exports.incrementView = async (req, res) => {
 exports.incrementLike = async (req, res) => {
   try {
     const { id } = req.params;
+
     const listing = await Listing.findByPk(id);
 
     if (!listing) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({
+        message: "Listing not found",
+      });
     }
 
-    const [like, created] = await Like.findOrCreate({
+    const existingLike = await Like.findOne({
       where: {
+        listingId: listing.id,
         userId: req.user.id,
-        mediaId: listing.mediaId,
       },
     });
 
-    const totalLikes = await Like.count({ where: { mediaId: listing.mediaId } });
-    res.json({ id: listing.id, likes: totalLikes, alreadyLiked: !created });
+    let liked = false;
+
+    if (existingLike) {
+      await existingLike.destroy();
+    } else {
+      await Like.create({
+        listingId: listing.id,
+        userId: req.user.id,
+      });
+
+      liked = true;
+    }
+
+    const totalLikes = await Like.count({
+      where: {
+        listingId: listing.id,
+      },
+    });
+
+    res.json({
+      liked,
+      likes: totalLikes,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to increment like" });
+
+    res.status(500).json({
+      message: "Failed to update like",
+    });
   }
 };
-
 exports.addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { content } = req.body;
 
     const listing = await Listing.findByPk(id);
+
     if (!listing) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({
+        message: "Listing not found",
+      });
     }
 
     const comment = await Comment.create({
-      mediaId: listing.mediaId,
+      listingId: listing.id,
       userId: req.user.id,
       content,
     });
 
-    res.status(201).json({ comment });
+    const fullComment = await Comment.findByPk(comment.id, {
+      include: [
+        {
+          model: User,
+          as: "commenter",
+          attributes: ["id", "fullName", "username", "profileImage"],
+        },
+      ],
+    });
+
+    res.status(201).json({
+      comment: fullComment,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to add comment" });
+
+    res.status(500).json({
+      message: "Failed to add comment",
+    });
   }
 };
 
@@ -178,25 +246,40 @@ exports.getMediaById = async (req, res) => {
     }
 
     const mediaItem = listing.media;
-    const views = await View.count({ where: { mediaId: mediaItem.id } });
-    const likes = await Like.count({ where: { mediaId: mediaItem.id } });
-    const comments = await Comment.findAll({
-      where: { mediaId: mediaItem.id },
-      include: [
-        {
-          model: User,
-          as: "commenter",
-          attributes: ["id", "fullName", "username", "profileImage"],
-        },
+const views = await View.count({
+  where: { listingId: listing.id },
+});
+  const likes = await Like.count({
+  where: {
+    listingId: listing.id,
+  },
+});
+ const comments = await Comment.findAll({
+  where: {
+    listingId: listing.id,
+  },
+  include: [
+    {
+      model: User,
+      as: "commenter",
+      attributes: [
+        "id",
+        "fullName",
+        "username",
+        "profileImage",
       ],
-      order: [["createdAt", "DESC"]],
-    });
+    },
+  ],
+  order: [["createdAt", "DESC"]],
+});
 
     res.json({
       id: listing.id,
       mediaId: mediaItem.id,
       title: mediaItem.title,
       description: mediaItem.description,
+      fileType: mediaItem.fileType,
+      mimeType: mediaItem.mimeType,
       price: listing.price,
       currency: listing.currency,
       stock: listing.stock,
@@ -276,9 +359,15 @@ exports.getAllMedia = async (req, res) => {
               .toLowerCase()
               .replace(/\s+/g, "-")
           : "creator";
-        const views = await View.count({ where: { mediaId: mediaItem.id } });
-        const likes = await Like.count({ where: { mediaId: mediaItem.id } });
-        const comments = await Comment.count({ where: { mediaId: mediaItem.id } });
+        const views = await View.count({
+  where: { listingId: listing.id },
+});
+const likes = await Like.count({
+    where: { listingId: listing.id }
+});
+       const comments = await Comment.count({
+    where: { listingId: listing.id }
+});
 
         return {
           id: listing.id,
@@ -286,6 +375,9 @@ exports.getAllMedia = async (req, res) => {
           title: mediaItem.title,
           description: mediaItem.description,
           price: listing.price,
+          fileType: mediaItem.fileType,
+          mimeType: mediaItem.mimeType,
+
           currency: listing.currency,
           stock: listing.stock,
           licenseType: listing.licenseType,

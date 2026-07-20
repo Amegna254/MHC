@@ -50,6 +50,11 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     defaultValue: "",
   },
+
+  bio: {
+  type: DataTypes.TEXT,
+  allowNull: true,
+},
 }, {
   timestamps: true,
 });

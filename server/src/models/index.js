@@ -7,6 +7,7 @@ const Like = require("./Like");
 const View = require("./View");
 const Comment = require("./Comment");
 const Order = require("./Order");
+const Follow = require("./Follow");
 
 /* ===========================
    USER ↔ MEDIA
@@ -45,84 +46,138 @@ Listing.belongsTo(User, {
   foreignKey: "sellerId",
   as: "seller",
 });
-
 /* ===========================
    LISTING ↔ LIKES
 =========================== */
 
 User.hasMany(Like, {
   foreignKey: "userId",
+  as: "likes",
 });
 
 Like.belongsTo(User, {
   foreignKey: "userId",
+  as: "user",
 });
 
 Listing.hasMany(Like, {
   foreignKey: "listingId",
+  as: "likes",
 });
 
 Like.belongsTo(Listing, {
   foreignKey: "listingId",
+  as: "listing",
 });
-
 /* ===========================
-   LISTING ↔ COMMENTS
+   MEDIA ↔ COMMENTS
 =========================== */
 
 User.hasMany(Comment, {
   foreignKey: "userId",
+  as: "comments",
 });
 
 Comment.belongsTo(User, {
   foreignKey: "userId",
+  as: "commenter",
 });
 
 Listing.hasMany(Comment, {
   foreignKey: "listingId",
+  as: "comments",
 });
 
 Comment.belongsTo(Listing, {
   foreignKey: "listingId",
+  as: "listing",
 });
-
 /* ===========================
-   LISTING ↔ VIEWS
+   MEDIA ↔ VIEWS
 =========================== */
 
 Listing.hasMany(View, {
   foreignKey: "listingId",
+  as: "views",
 });
 
 View.belongsTo(Listing, {
   foreignKey: "listingId",
+  as: "listing",
+});
+User.hasMany(View, {
+  foreignKey: "userId",
+  as: "views",
+});
+
+View.belongsTo(User, {
+  foreignKey: "userId",
+  as: "viewer",
 });
 
 /* ===========================
-   LISTING ↔ ORDERS
+   ORDERS
 =========================== */
 
 User.hasMany(Order, {
-  foreignKey: "buyerId",
+  foreignKey: "userId",
   as: "orders",
 });
 
 Order.belongsTo(User, {
-  foreignKey: "buyerId",
+  foreignKey: "userId",
   as: "buyer",
+});
+
+Media.hasMany(Order, {
+  foreignKey: "mediaId",
+  as: "orders",
+});
+
+Order.belongsTo(Media, {
+  foreignKey: "mediaId",
+  as: "media",
 });
 
 Listing.hasMany(Order, {
   foreignKey: "listingId",
+  as: "orders",
 });
 
 Order.belongsTo(Listing, {
   foreignKey: "listingId",
+  as: "listing",
 });
 
 /* ===========================
-   EXPORTS
+   USER ↔ FOLLOWS
 =========================== */
+
+// Users who follow others
+User.hasMany(Follow, {
+  foreignKey: "followerId",
+  as: "following",
+});
+
+Follow.belongsTo(User, {
+  foreignKey: "followerId",
+  as: "follower",
+});
+
+// Users being followed
+User.hasMany(Follow, {
+  foreignKey: "followingId",
+  as: "followers",
+});
+
+Follow.belongsTo(User, {
+  foreignKey: "followingId",
+  as: "followingUser",
+});
+
+/* ===================================================
+   EXPORTS
+=================================================== */
 
 module.exports = {
   sequelize,
@@ -130,7 +185,8 @@ module.exports = {
   Media,
   Listing,
   Like,
-  View,
   Comment,
+  View,
   Order,
+  Follow,
 };

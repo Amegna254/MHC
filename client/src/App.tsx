@@ -11,6 +11,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Portfolio from "./pages/Portfolio";
 import Marketplace from "./pages/Marketplace";
+
 import CreatorProfile from "./pages/CreatorProfile";
 import ListingDetail from "./pages/ListingDetail";
 import NotFound from "./pages/Notfound";
@@ -35,6 +36,8 @@ function App() {
       <Route path="/register" element={<Register />} />
 
       <Route path="/about" element={<About />} />
+
+      <Route path="/creator/:creatorSlug" element={<CreatorProfile />} />
 
       <Route path="/contact" element={<Contact />} />
 
