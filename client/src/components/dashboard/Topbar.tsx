@@ -1,79 +1,99 @@
+import { Link } from "react-router-dom";
+import {
+  FaSearch,
+  FaBell,
+  FaMoon,
+  FaPlus,
+} from "react-icons/fa";
 import { useAuth } from "../../hooks/useAuth";
-import { useEffect, useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import BackToDashboard from "../BackToDashboard";
 
 function Topbar() {
   const { user } = useAuth();
-  const [showBack, setShowBack] = useState<boolean>(true);
-
-  useEffect(() => {
-    const val = localStorage.getItem("showBackButton");
-    setShowBack(val === null ? true : val === "true");
-  }, []);
-
-  const toggleShowBack = () => {
-    const next = !showBack;
-    setShowBack(next);
-    localStorage.setItem("showBackButton", String(next));
-  };
 
   return (
-    <header className="bg-slate-900 rounded-xl p-6 flex justify-between items-center shadow-lg">
+    <header className="flex flex-wrap items-center justify-between gap-6">
 
-      {/* Welcome */}
+      {/* Left */}
       <div>
-        <h2 className="text-3xl font-bold">
-          Welcome back 👋
-        </h2>
+        <h1 className="text-5xl font-bold">
+          Dashboard
+        </h1>
 
-        <p className="text-cyan-400 text-xl mt-1">
-          {user?.fullName}
+        <p className="text-slate-400 mt-2 text-lg">
+          Welcome back, {user?.fullName}
         </p>
       </div>
 
-      {/* User Info */}
-      <div className="flex items-center gap-4">
+      {/* Right */}
+      <div className="flex flex-wrap items-center gap-4">
 
-        {/* Back button toggle & back button */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleShowBack}
-            title={showBack ? "Hide back button" : "Show back button"}
-            className="p-2 rounded hover:bg-slate-800"
-          >
-            {showBack ? <FaEye className="w-4 h-4" /> : <FaEyeSlash className="w-4 h-4" />}
-          </button>
+        {/* Search */}
 
-          {showBack && <BackToDashboard />}
-        </div>
+        <div className="relative">
 
-        <div className="text-right">
-          <p className="font-semibold">
-            {user?.fullName}
-          </p>
+          <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
 
-          <p className="text-slate-400 text-sm">
-            {user?.email}
-          </p>
+          <input
+            type="text"
+            placeholder="Search creators, media, tags..."
+            className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 py-4 pl-14 pr-24 text-white outline-none focus:border-cyan-500"
+          />
 
-          <span className="inline-block mt-2 px-3 py-1 bg-cyan-500 rounded-full text-sm font-medium">
-            {user?.role}
+          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+            Ctrl + K
           </span>
+
         </div>
 
-        <img
-          src={
-            user?.profileImage
-              ? `http://localhost:5000/uploads/avatars/${user.profileImage}`
-              : "/default-avatar.png"
-          }
-          alt="Avatar"
-          className="w-16 h-16 rounded-full border-2 border-cyan-500 object-cover"
-          onError={(e) => {
-            e.currentTarget.src = "/default-avatar.png";
-          }}
-        />
+        {/* Upload */}
+
+        <Link
+          to="/upload"
+          className="flex items-center gap-3 rounded-2xl bg-cyan-500 px-7 py-4 text-lg font-semibold text-black hover:bg-cyan-400 transition"
+        >
+          <FaPlus />
+          Upload
+        </Link>
+
+        {/* Notification */}
+
+        <button className="relative rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">
+
+          <FaBell size={20} />
+
+          <span className="absolute right-3 top-3 h-3 w-3 rounded-full bg-red-500"></span>
+
+        </button>
+
+        {/* Dark Mode */}
+
+        <button className="rounded-2xl bg-slate-900 p-4 hover:bg-slate-800">
+          <FaMoon size={18} />
+        </button>
+
+        {/* Profile */}
+
+        <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2">
+
+          <img
+            src={user?.profileImage || "/avatar.png"}
+            alt="avatar"
+            className="h-12 w-12 rounded-full border-2 border-cyan-500 object-cover"
+          />
+
+          <div>
+
+            <p className="font-semibold">
+              {user?.fullName}
+            </p>
+
+            <p className="text-sm text-slate-400">
+              @{user?.username}
+            </p>
+
+          </div>
+
+        </div>
 
       </div>
 

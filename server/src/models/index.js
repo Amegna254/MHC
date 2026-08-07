@@ -119,26 +119,18 @@ View.belongsTo(User, {
    ORDERS
 =========================== */
 
+// Buyer
 User.hasMany(Order, {
-  foreignKey: "userId",
+  foreignKey: "buyerId",
   as: "orders",
 });
 
 Order.belongsTo(User, {
-  foreignKey: "userId",
+  foreignKey: "buyerId",
   as: "buyer",
 });
 
-Media.hasMany(Order, {
-  foreignKey: "mediaId",
-  as: "orders",
-});
-
-Order.belongsTo(Media, {
-  foreignKey: "mediaId",
-  as: "media",
-});
-
+// Listing purchased
 Listing.hasMany(Order, {
   foreignKey: "listingId",
   as: "orders",

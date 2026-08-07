@@ -45,4 +45,16 @@ router.post(
   mediaController.addComment
 );
 
+router.put(
+  "/:id",
+  authMiddleware,
+  mediaController.updateMedia
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  mediaController.deleteMedia
+);
+
 module.exports = router;

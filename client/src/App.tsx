@@ -11,23 +11,23 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Portfolio from "./pages/Portfolio";
 import Marketplace from "./pages/Marketplace";
-
+import Settings from "./pages/Settings";
+import MediaLibrary from "./pages/MediaLibrary";
 import CreatorProfile from "./pages/CreatorProfile";
 import ListingDetail from "./pages/ListingDetail";
-import NotFound from "./pages/Notfound";
-
-// NEW
+import MediaDetails from "./pages/MediaDetails";
+import EditMedia from "./pages/EditMedia";
+import Performance from "./pages/Performance";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-
+import Checkout from "./pages/Checkout";
+import NotFound from "./pages/Notfound";
+import MyPurchases from "./pages/MyPurchases";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import Performance from "./pages/Performance";
-
 
 function App() {
   return (
     <Routes>
-
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
 
@@ -37,11 +37,26 @@ function App() {
 
       <Route path="/about" element={<About />} />
 
-      <Route path="/creator/:creatorSlug" element={<CreatorProfile />} />
+      <Route
+  path="/my-purchases"
+  element={
+    <ProtectedRoute>
+      <MyPurchases />
+    </ProtectedRoute>
+  }
+/>
 
       <Route path="/contact" element={<Contact />} />
 
       <Route path="/portfolio" element={<Portfolio />} />
+
+      <Route path="/settings" element={<Settings />} />
+
+      <Route path="/library" element={<MediaLibrary />} />
+
+      <Route path="/media/:id" element={<MediaDetails />} />
+
+      <Route path="/creator/:creatorSlug" element={<CreatorProfile />} />
 
       {/* Forgot Password */}
       <Route
@@ -55,12 +70,28 @@ function App() {
         element={<ResetPassword />}
       />
 
-      {/* Public Marketplace */}
-      <Route path="/marketplace" element={<Marketplace />} />
-      <Route path="/marketplace/item/:itemId" element={<ListingDetail />} />
-      <Route path="/creator/:creatorSlug" element={<CreatorProfile />} />
+      {/* Marketplace */}
+      <Route
+        path="/marketplace"
+        element={<Marketplace />}
+      />
+
+      <Route
+        path="/marketplace/item/:itemId"
+        element={<ListingDetail />}
+      />
+
+      <Route
+        path="/checkout/:listingId"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected Routes */}
+
       <Route
         path="/dashboard"
         element={
@@ -106,9 +137,21 @@ function App() {
         }
       />
 
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="/media/edit/:id"
+        element={
+          <ProtectedRoute>
+            <EditMedia />
+          </ProtectedRoute>
+        }
+      />
 
-      </Routes>
+      {/* 404 */}
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
+    </Routes>
   );
 }
 

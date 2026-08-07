@@ -1,49 +1,79 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getListingById, incrementView, likeItem, addComment } from "../services/mediaService";
+import {
+  getListingById,
+  incrementView,
+  likeItem,
+  addComment,
+} from "../services/mediaService";
 
-export default function ListingDetail() {
-  const { itemId } = useParams();
-  interface Listing {
+interface Creator {
+  id: number;
+  fullName: string;
+  username: string;
+  profileImage?: string;
+}
+
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  commenter?: {
+    username: string;
+  };
+}
+
+interface Listing {
   id: number;
   title: string;
   description: string;
   image: string;
+  fileName?: string;
   fileType: string;
   mimeType: string;
   category: string;
-  creator: string;
-  creatorSlug: string;
+
+  creator: Creator;
+
   price: string;
   rating: number;
   likes: number;
   views: number;
-  comments: any[];
+  comments: Comment[];
 }
 
-const [item, setItem] = useState<Listing | null>(null);
+export default function ListingDetail() {
+  const { itemId } = useParams();
+
+  const [item, setItem] = useState<Listing | null>(null);
+
   const [loading, setLoading] = useState(true);
+
   const [liked, setLiked] = useState(false);
-  const [views, setViews] = useState<number>(0);
+
+  const [views, setViews] = useState(0);
+
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<any[]>([]);
+
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     const loadListing = async () => {
       try {
         if (!itemId) return;
-        const listing = await getListingById(itemId);
-        console.log("Listing:", listing);
-        console.log("File Type:", listing.fileType);
-        console.log("File URL:", listing.image);
-        console.log("Mime Type:", listing.mimeType);
 
+        const listing = await getListingById(itemId);
+
+        console.log("Listing:", listing);
 
         setItem(listing);
+
         setViews(listing.views || 0);
+
         setComments(listing.comments || []);
-      } catch (error) {
-        console.error(error);
+
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -54,25 +84,31 @@ const [item, setItem] = useState<Listing | null>(null);
 
   useEffect(() => {
     if (!itemId) return;
-    const sendView = async () => {
+
+    const updateViews = async () => {
       try {
         const res = await incrementView(itemId);
-        setViews(res.views ?? views + 1);
+
+        if (res?.views !== undefined) {
+          setViews(res.views);
+        }
+
       } catch (err) {
-        // ignore
+        console.error(err);
       }
     };
 
-    sendView();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemId]);
+    updateViews();
 
-  if (loading) {
+  }, [itemId]);
+    if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white pt-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-slate-800 bg-slate-900 p-10 text-center text-slate-300 shadow-xl shadow-black/20">
-          <h1 className="text-3xl font-bold">Loading listing...</h1>
-          <p className="mt-4 text-slate-400">Please wait while we load the marketplace item details.</p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Loading Listing...</h1>
+          <p className="mt-3 text-slate-400">
+            Please wait while we load the media.
+          </p>
         </div>
       </div>
     );
@@ -80,215 +116,457 @@ const [item, setItem] = useState<Listing | null>(null);
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white pt-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-slate-800 bg-slate-900 p-10 text-center text-slate-300 shadow-xl shadow-black/20">
-          <h1 className="text-3xl font-bold">Listing not found</h1>
-          <p className="mt-4 text-slate-400">The item you requested does not exist or has been removed.</p>
-          <Link
-            to="/marketplace"
-            className="mt-8 inline-flex rounded-2xl border border-cyan-500 bg-cyan-500/10 px-6 py-3 text-sm text-cyan-300 hover:bg-cyan-500/20 transition"
-          >
-            Back to Marketplace
-          </Link>
-        </div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-red-400">
+        Listing not found.
       </div>
     );
   }
 
-  const creator = {
-    name: item.creator,
-    role: "Creator",
-    followers: "0",
-    uploads: 0,
-    bio: ["Creator active on the marketplace"],
-    location: "Unknown",
-  };
+  const fileUrl =
+    item.image ||
+    `http://localhost:5000/uploads/${item.fileName}`;
 
-  const rating = typeof item.rating === "number" ? item.rating : 0;
-  const renderedComments = Array.isArray(comments)
-    ? comments
-    : Array.isArray(item.comments)
-    ? item.comments
-    : [];
+  const rating =
+    typeof item.rating === "number"
+      ? item.rating
+      : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="rounded-3xl bg-slate-900 p-8 shadow-xl shadow-black/20">
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-3xl overflow-hidden bg-slate-950/80">
-     {item.fileType === "image" && (
-    <img
-      src={item.image}
-      alt={item.title}
-      className="h-full w-full object-cover"
-    />
-  )}
+    <div className="min-h-screen bg-slate-950 text-white pt-24 px-4">
 
-  {item.fileType === "video" && (
-    <video
-      controls
-      className="w-full h-full bg-black"
-    >
-      <source
-        src={item.image}
-        type={item.mimeType}
-      />
-      Your browser does not support video playback.
-    </video>
-  )}
+      <div className="max-w-7xl mx-auto space-y-8">
 
-  {item.fileType === "audio" && (
-    <div className="flex items-center justify-center min-h-[400px] p-8">
-      <audio controls className="w-full">
-        <source
-          src={item.image}
-          type={item.mimeType}
-        />
-        Your browser does not support audio.
-      </audio>
-    </div>
-  )}
+        <div className="rounded-3xl bg-slate-900 p-8 shadow-xl">
 
-  {item.fileType === "document" && (
-    <iframe
-      src={item.image}
-      title={item.title}
-      className="w-full h-[700px] bg-white"
-    />
-  )}
+          <div className="grid lg:grid-cols-2 gap-10">
 
-</div>
+            {/* ================= LEFT ================= */}
+
+            <div className="rounded-3xl overflow-hidden bg-slate-950">
+
+              {item.fileType === "image" && (
+                <img
+                  src={fileUrl}
+                  alt={item.title}
+                  className="w-full object-cover"
+                />
+              )}
+
+              {item.fileType === "video" && (
+                <video
+                  controls
+                  className="w-full bg-black"
+                >
+                  <source
+                    src={fileUrl}
+                    type={item.mimeType}
+                  />
+                </video>
+              )}
+
+              {item.fileType === "audio" && (
+                <div className="p-10">
+                  <audio controls className="w-full">
+                    <source
+                      src={fileUrl}
+                      type={item.mimeType}
+                    />
+                  </audio>
+                </div>
+              )}
+
+              {item.fileType === "document" && (
+                <iframe
+                  src={fileUrl}
+                  title={item.title}
+                  className="w-full h-[700px] bg-white"
+                />
+              )}
+
+            </div>
+
+            {/* ================= RIGHT ================= */}
 
             <div className="space-y-6">
+
               <div>
-                <p className="text-sm uppercase tracking-[0.4em] text-cyan-400">{item.category}</p>
-                <h1 className="mt-4 text-4xl font-bold">{item.title}</h1>
-                <p className="mt-3 text-slate-400">A curated creator release available for purchase or licensing.</p>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-slate-950/40 p-5">
-                  <p className="text-sm uppercase text-slate-400">Price</p>
-                  <p className="mt-2 text-3xl font-semibold text-white">{item.price}</p>
-                </div>
-                <div className="rounded-3xl bg-slate-950/40 p-5">
-                  <p className="text-sm uppercase text-slate-400">Rating</p>
-                  <p className="mt-2 text-3xl font-semibold">{rating.toFixed(1)} ⭐</p>
-                  <div className="mt-2 text-sm text-slate-400">{views} views • ❤️ {item.likes ?? 0} • 💬 {comments.length}</div>
-                </div>
-              </div>
+                <p className="uppercase tracking-[0.35em] text-cyan-400 text-sm">
 
-              <div className="rounded-3xl bg-slate-950/40 p-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm uppercase text-slate-400">Creator</p>
-                    <Link
-                      to={`/creator/${item.creatorSlug}`}
-                      className="mt-2 block text-2xl font-semibold text-white hover:text-cyan-300"
-                    >
-                      {item.creator}
-                    </Link>
-                  </div>
-                  <div className="rounded-2xl bg-slate-900 px-4 py-3 text-sm text-slate-300">
-                    {creator.location}
-                  </div>
-                </div>
-                <p className="mt-4 text-slate-400">
-                  {creator.bio.slice(0, 2).join(" • ")}
+                  {item.category}
+
                 </p>
+
+                <h1 className="mt-4 text-5xl font-bold">
+
+                  {item.title}
+
+                </h1>
+
+                <p className="mt-5 text-slate-300 leading-8">
+
+                  {item.description || "No description provided."}
+
+                </p>
+
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button className="w-full rounded-2xl bg-cyan-500 px-5 py-4 text-sm font-semibold text-black hover:bg-cyan-400 transition">
-                  Purchase Now
-                </button>
-                <button
-  onClick={async () => {
-    try {
-      const res = await likeItem(item.id);
+              <div className="grid sm:grid-cols-2 gap-5">
 
-      setLiked(res.liked);
+                <div className="rounded-3xl bg-slate-950 p-6">
 
-      setItem((prev: any) => ({
-        ...prev,
-        likes: res.likes,
-      }));
-    } catch (err) {
-      console.error(err);
-    }
-  }}
-  className="w-full rounded-2xl border border-slate-800 px-5 py-4 text-sm font-semibold text-cyan-300 hover:border-cyan-500 hover:text-white transition text-center"
+                  <p className="text-slate-400">
+
+                    Price
+
+                  </p>
+
+                  <h2 className="mt-3 text-4xl font-bold">
+
+                    {item.price || "Free"}
+
+                  </h2>
+
+                </div>
+
+                <div className="rounded-3xl bg-slate-950 p-6">
+
+                  <p className="text-slate-400">
+
+                    Rating
+
+                  </p>
+
+                  <h2 className="mt-3 text-4xl font-bold">
+
+                    ⭐ {rating.toFixed(1)}
+
+                  </h2>
+
+                  <div className="mt-3 text-slate-400">
+
+                    👁 {views}
+
+                    {" • "}
+
+                    ❤️ {item.likes}
+
+                    {" • "}
+
+                    💬 {comments.length}
+
+                  </div>
+
+                </div>
+
+              </div>
+                            {/* ================= CREATOR ================= */}
+
+              <div className="rounded-3xl bg-slate-950 p-6">
+
+                <p className="text-sm uppercase text-slate-400">
+                  Creator
+                </p>
+
+                <div className="mt-5 flex items-center gap-4">
+
+                  {item.creator.profileImage ? (
+
+                    <img
+                      src={item.creator.profileImage}
+                      alt={item.creator.fullName}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-cyan-500"
+                    />
+
+                  ) : (
+
+                    <div className="w-16 h-16 rounded-full bg-cyan-600 flex items-center justify-center text-2xl font-bold">
+
+                      {item.creator.fullName.charAt(0).toUpperCase()}
+
+                    </div>
+
+                  )}
+
+                  <div>
+
+                    <h2 className="text-2xl font-bold">
+
+                      {item.creator.fullName}
+
+                    </h2>
+
+                    <p className="text-cyan-400">
+
+                      @{item.creator.username}
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <p className="mt-5 text-slate-400">
+
+                  Creator on the MHC Marketplace.
+
+                </p>
+
+              </div>
+
+              {/* ================= ACTIONS ================= */}
+
+              <div className="grid sm:grid-cols-3 gap-4">
+
+              <Link
+  to={`/checkout/${item.id}`}
+  className="block rounded-2xl bg-cyan-500 py-4 text-center font-bold text-black hover:bg-cyan-400 transition"
 >
-  {liked ? "❤️ Liked" : "🤍 Like"}
-</button>
+  Purchase Now
+</Link>
+
+                <button
+                  onClick={async () => {
+                    try {
+
+                      const res = await likeItem(item.id);
+
+                      setLiked(res.liked);
+
+                      setItem((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              likes: res.likes,
+                            }
+                          : prev
+                      );
+
+                    } catch (err) {
+
+                      console.error(err);
+
+                    }
+                  }}
+                  className="rounded-2xl border border-slate-700 py-4 font-semibold hover:border-cyan-500 transition"
+                >
+                  {liked ? "❤️ Liked" : "🤍 Like"}
+                </button>
+
                 <Link
-                  to={`/creator/${item.creatorSlug}`}
-                  className="w-full rounded-2xl border border-slate-800 px-5 py-4 text-sm font-semibold text-cyan-300 hover:border-cyan-500 hover:text-white transition text-center"
+                  to={`/creator/${item.creator.username}`}
+                  className="rounded-2xl border border-slate-700 py-4 text-center font-semibold hover:border-cyan-500 hover:text-cyan-400 transition"
                 >
                   View Creator
                 </Link>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="rounded-3xl bg-slate-900 p-8 shadow-xl shadow-black/20">
-          <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-            <div className="rounded-3xl bg-slate-950/40 p-6">
-              <h3 className="text-lg font-semibold text-white">Comments</h3>
-              <div className="mt-4 space-y-4">
-                {comments.length === 0 ? (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-400">No comments yet.</div>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="rounded-3xl bg-slate-900 p-4">
-                      <div className="flex items-center justify-between gap-3 text-sm text-slate-400">
-                        <span>{comment.commenter?.username || "Anonymous"}</span>
-                        <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <p className="mt-2 text-slate-200">{comment.content}</p>
-                    </div>
-                  ))
-                )}
               </div>
+
+            </div>
+
+          </div>
+
+        </div>
+                {/* ================= COMMENTS ================= */}
+
+        <div className="rounded-3xl bg-slate-900 p-8 shadow-xl">
+
+          <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+
+            {/* LEFT */}
+
+            <div>
+
+              <h2 className="text-2xl font-bold mb-6">
+
+                Comments
+
+              </h2>
+
+              {comments.length === 0 ? (
+
+                <div className="rounded-2xl bg-slate-950 border border-slate-800 p-6 text-slate-400">
+
+                  No comments yet.
+
+                </div>
+
+              ) : (
+
+                <div className="space-y-4">
+
+                  {comments.map((comment) => (
+
+                    <div
+                      key={comment.id}
+                      className="rounded-2xl bg-slate-950 border border-slate-800 p-5"
+                    >
+
+                      <div className="flex justify-between mb-2">
+
+                        <h4 className="font-semibold">
+
+                          {comment.commenter?.username || "Anonymous"}
+
+                        </h4>
+
+                        <span className="text-sm text-slate-500">
+
+                          {new Date(comment.createdAt).toLocaleDateString()}
+
+                        </span>
+
+                      </div>
+
+                      <p className="text-slate-300">
+
+                        {comment.content}
+
+                      </p>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+              )}
+
+              {/* ================= ADD COMMENT ================= */}
 
               <form
-                onSubmit={async (event) => {
-                  event.preventDefault();
-                  if (!item.id || !commentText.trim()) return;
+                className="mt-8 space-y-4"
+                onSubmit={async (e) => {
+
+                  e.preventDefault();
+
+                  if (!commentText.trim()) return;
+
                   try {
-                    const res = await addComment(item.id, commentText.trim());
-                    setComments((prev) => [res.comment, ...prev]);
+
+                    const res = await addComment(
+                      item.id,
+                      commentText
+                    );
+
+                    setComments((prev) => [
+                      res.comment,
+                      ...prev,
+                    ]);
+
                     setCommentText("");
+
                   } catch (err) {
+
                     console.error(err);
+
                   }
+
                 }}
-                className="mt-6 space-y-3"
               >
+
                 <textarea
-                  className="w-full rounded-2xl border border-slate-800 bg-slate-950 p-4 text-white outline-none"
-                  placeholder="Leave a comment"
+                  rows={4}
                   value={commentText}
-                  onChange={(event) => setCommentText(event.target.value)}
+                  onChange={(e) =>
+                    setCommentText(e.target.value)
+                  }
+                  placeholder="Write a comment..."
+                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 p-4 outline-none focus:border-cyan-500"
                 />
+
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-black hover:bg-cyan-400 transition"
+                  className="rounded-2xl bg-cyan-500 px-6 py-3 font-semibold text-black hover:bg-cyan-400 transition"
                 >
                   Add Comment
                 </button>
+
               </form>
+
             </div>
-            <div className="rounded-3xl bg-slate-950/40 p-6">
-              <h3 className="text-lg font-semibold text-white">Creator</h3>
-              <p className="mt-4 text-slate-300">{creator.bio.slice(0, 2).join(" • ")}</p>
-              <p className="mt-4 text-sm text-slate-400">Location: {creator.location}</p>
+
+            {/* RIGHT */}
+
+            <div>
+
+              <div className="rounded-3xl bg-slate-950 border border-slate-800 p-6">
+
+                <h3 className="text-xl font-bold">
+
+                  Creator Information
+
+                </h3>
+
+                <div className="mt-6 flex items-center gap-4">
+
+                  {item.creator.profileImage ? (
+
+                    <img
+                      src={item.creator.profileImage}
+                      alt={item.creator.fullName}
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
+
+                  ) : (
+
+                    <div className="w-14 h-14 rounded-full bg-cyan-600 flex items-center justify-center font-bold text-xl">
+
+                      {item.creator.fullName[0]}
+
+                    </div>
+
+                  )}
+
+                  <div>
+
+                    <h4 className="font-bold">
+
+                      {item.creator.fullName}
+
+                    </h4>
+
+                    <p className="text-cyan-400">
+
+                      @{item.creator.username}
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="mt-6 space-y-3 text-slate-400">
+
+                  <p>
+                    Uploads available on the MHC Marketplace.
+                  </p>
+
+                  <p>
+                    Follow this creator to stay updated with future uploads.
+                  </p>
+
+                </div>
+
+                <Link
+                  to={`/creator/${item.creator.username}`}
+                  className="mt-8 block rounded-2xl bg-cyan-500 text-center py-3 font-semibold text-black hover:bg-cyan-400 transition"
+                >
+                  Visit Creator Profile
+                </Link>
+
+              </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
+
   );
+
 }

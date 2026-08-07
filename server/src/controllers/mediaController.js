@@ -6,6 +6,8 @@ const {
   View,
   User,
 } = require("../models");
+const fs = require("fs");
+const path = require("path");
 const mapCategory = (fileType) => {
   switch (fileType) {
     case "image":
@@ -225,6 +227,63 @@ exports.addComment = async (req, res) => {
 exports.getMediaById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const media = await Media.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "owner",
+          attributes: [
+            "id",
+            "fullName",
+            "username",
+            "profileImage",
+          ],
+        },
+      ],
+    });
+
+    if (!media) {
+      return res.status(404).json({
+        message: "Media not found",
+      });
+    }
+
+    const likes = media.likes || 0;
+    const views = media.views || 0;
+
+    res.json({
+      id: media.id,
+      title: media.title,
+      description: media.description,
+      fileType: media.fileType,
+      mimeType: media.mimeType,
+      image: getImageUrl(media.filePath, req),
+      fileName: media.filePath,
+      likes,
+      views,
+      createdAt: media.createdAt,
+
+      creator: {
+        id: media.owner?.id,
+        fullName: media.owner?.fullName,
+        username: media.owner?.username,
+        profileImage: media.owner?.profileImage,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to load media",
+    });
+  }
+};
+
+exports.getListingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
     const listing = await Listing.findByPk(id, {
       include: [
         {
@@ -234,7 +293,12 @@ exports.getMediaById = async (req, res) => {
             {
               model: User,
               as: "owner",
-              attributes: ["id", "fullName", "username", "profileImage"],
+              attributes: [
+                "id",
+                "fullName",
+                "username",
+                "profileImage",
+              ],
             },
           ],
         },
@@ -242,36 +306,43 @@ exports.getMediaById = async (req, res) => {
     });
 
     if (!listing) {
-      return res.status(404).json({ message: "Listing not found" });
+      return res.status(404).json({
+        message: "Listing not found",
+      });
     }
 
     const mediaItem = listing.media;
-const views = await View.count({
-  where: { listingId: listing.id },
-});
-  const likes = await Like.count({
-  where: {
-    listingId: listing.id,
-  },
-});
- const comments = await Comment.findAll({
-  where: {
-    listingId: listing.id,
-  },
-  include: [
-    {
-      model: User,
-      as: "commenter",
-      attributes: [
-        "id",
-        "fullName",
-        "username",
-        "profileImage",
+
+    const views = await View.count({
+      where: {
+        listingId: listing.id,
+      },
+    });
+
+    const likes = await Like.count({
+      where: {
+        listingId: listing.id,
+      },
+    });
+
+    const comments = await Comment.findAll({
+      where: {
+        listingId: listing.id,
+      },
+      include: [
+        {
+          model: User,
+          as: "commenter",
+          attributes: [
+            "id",
+            "fullName",
+            "username",
+            "profileImage",
+          ],
+        },
       ],
-    },
-  ],
-  order: [["createdAt", "DESC"]],
-});
+      order: [["createdAt", "DESC"]],
+    });
 
     res.json({
       id: listing.id,
@@ -280,28 +351,163 @@ const views = await View.count({
       description: mediaItem.description,
       fileType: mediaItem.fileType,
       mimeType: mediaItem.mimeType,
+      image: getImageUrl(mediaItem.filePath, req),
       price: listing.price,
       currency: listing.currency,
       stock: listing.stock,
       licenseType: listing.licenseType,
       isForSale: listing.isForSale,
       category: mediaItem.category,
-      image: getImageUrl(mediaItem.filePath, req),
-      creator: mediaItem.owner?.fullName || mediaItem.owner?.username || "Creator",
-      creatorSlug: mediaItem.owner
-        ? String(mediaItem.owner.username || mediaItem.owner.fullName)
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-        : "creator",
-      creatorProfileImage: mediaItem.owner?.profileImage || null,
-      views,
+      creator: {
+        id: mediaItem.owner?.id,
+        fullName: mediaItem.owner?.fullName,
+        username: mediaItem.owner?.username,
+        profileImage: mediaItem.owner?.profileImage
+      },
       likes,
+      views,
       comments,
       createdAt: listing.createdAt,
     });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to load listing" });
+
+    res.status(500).json({
+      message: "Failed to load listing",
+    });
+  }
+};
+
+exports.updateMedia = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const media = await Media.findByPk(id);
+
+    if (!media) {
+      return res.status(404).json({
+        message: "Media not found",
+      });
+    }
+
+    if (media.uploadedBy !== req.user.id) {
+      return res.status(403).json({
+        message: "You are not allowed to edit this media.",
+      });
+    }
+
+    await media.update({
+      title: req.body.title ?? media.title,
+      description: req.body.description ?? media.description,
+      category: req.body.category ?? media.category,
+      visibility: req.body.visibility ?? media.visibility,
+      status: req.body.status ?? media.status,
+    });
+
+    const listing = await Listing.findOne({
+      where: {
+        mediaId: media.id,
+      },
+    });
+
+    if (listing) {
+      await listing.update({
+        price: req.body.price ?? listing.price,
+        currency: req.body.currency ?? listing.currency,
+        stock: req.body.stock ?? listing.stock,
+        licenseType: req.body.licenseType ?? listing.licenseType,
+        isForSale:
+          req.body.isForSale ?? listing.isForSale,
+        status:
+          req.body.listingStatus ?? listing.status,
+      });
+    }
+
+    res.json({
+      message: "Media updated successfully.",
+      media,
+      listing,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to update media.",
+    });
+  }
+};
+
+exports.deleteMedia = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const media = await Media.findByPk(id);
+
+    if (!media) {
+      return res.status(404).json({
+        message: "Media not found",
+      });
+    }
+
+    if (media.uploadedBy !== req.user.id) {
+      return res.status(403).json({
+        message: "You are not allowed to delete this media.",
+      });
+    }
+
+    const listing = await Listing.findOne({
+      where: {
+        mediaId: media.id,
+      },
+    });
+
+    if (listing) {
+
+      await Like.destroy({
+        where: {
+          listingId: listing.id,
+        },
+      });
+
+      await Comment.destroy({
+        where: {
+          listingId: listing.id,
+        },
+      });
+
+      await View.destroy({
+        where: {
+          listingId: listing.id,
+        },
+      });
+
+      await listing.destroy();
+    }
+
+   const fullPath = path.join(
+  __dirname,
+  "..",
+  media.filePath
+);
+
+if (fs.existsSync(fullPath)) {
+  fs.unlinkSync(fullPath);
+}
+
+    await media.destroy();
+
+    res.json({
+      message: "Media deleted successfully.",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to delete media.",
+    });
   }
 };
 
