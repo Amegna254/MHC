@@ -156,7 +156,7 @@ export default function Checkout() {
                     alert("Order created successfully!");
 
                     // Redirect to My Purchases
-                    navigate("/purchases");
+                    navigate("/my-purchases");
 
                   } catch (error) {
                     console.error(error);

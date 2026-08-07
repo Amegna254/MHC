@@ -95,7 +95,7 @@ export default function Marketplace() {
           </Link>
 
           <Link
-  to="/purchases"
+  to="/my-purchases"
   className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-black hover:bg-emerald-400 transition"
 >
   My Purchases
