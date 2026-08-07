@@ -1,0 +1,308 @@
+Excellent. Since you're using VS Code and GitHub, let's start by building a solid foundation for Home Club Studio.
+
+Phase 1: Basic Website Structure
+Features for Version 1
+Home page
+User registration
+User login
+Artist profile
+Artwork upload (images initially)
+Portfolio page
+Performance dashboard
+AI assistant placeholder
+Project Structure
+home-club-studio/
+│
+├── client/
+│   ├── index.html
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── app.js
+│   └── assets/
+│
+├── server/
+│   ├── server.js
+│   ├── routes/
+│   ├── controllers/
+│   ├── models/
+│   └── uploads/
+│
+├── database/
+│   └── schema.sql
+│
+├── .gitignore
+├── package.json
+└── README.md
+Step 1: Create Project Folder
+
+Open VS Code terminal:
+
+mkdir home-club-studio
+cd home-club-studio
+Step 2: Initialize Git
+git init
+Step 3: Initialize Node.js
+npm init -y
+Step 4: Install Dependencies
+npm install express multer cors bcryptjs jsonwebtoken sqlite3
+
+These packages provide:
+
+Express → Web server
+Multer → File uploads
+CORS → Frontend/backend communication
+bcryptjs → Password hashing
+jsonwebtoken → Login sessions
+sqlite3 → Database
+Step 5: Create Basic Server
+
+Create:
+
+server/server.js
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.send("Home Club Studio API Running");
+});
+
+const PORT = 5000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+Step 6: Create Home Page
+
+Create:
+
+client/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Club Studio</title>
+</head>
+<body>
+    <h1>Welcome to Home Club Studio</h1>
+
+    <p>Upload and showcase your artwork.</p>
+
+    <button>Register</button>
+    <button>Login</button>
+</body>
+</html>
+Step 7: Test Server
+
+Run:
+
+node server/server.js
+
+Open:
+
+http://localhost:5000
+
+You should see:
+
+Home Club Studio API Running
+Step 8: Push to GitHub
+
+Create a repository on GitHub named:
+
+home-club-studio
+
+Then:
+
+git add .
+git commit -m "Initial Home Club Studio setup"
+git branch -M main
+git remote add origin https://github.com/amegna254/home-club-studio.git
+git push -u origin main
+Next Milestone
+
+After this foundation is running, we'll build:
+
+User registration and login
+SQLite database
+Image uploads
+Artist profiles
+Dashboard analytics
+Portfolio creator
+Drawing canvas
+House-plan design tools
+AI assistant chatbot
+GitHub deployment and cloud hosting
+
+This approach will keep the project manageable while gradually adding the advanced features you described.
+
+Okay 
+
+Great! The next step is to get the basic project running locally and pushed to GitHub.
+
+Checklist
+✅ Create the home-club-studio folder
+✅ Initialize Git (git init)
+✅ Initialize Node.js (npm init -y)
+✅ Install dependencies
+✅ Create server/server.js
+✅ Create client/index.html
+✅ Run the server with node server/server.js
+✅ Push to GitHub
+After You've Done That
+
+We'll build the database and user authentication.
+
+Database Tables (Version 1)
+
+Users
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    email TEXT UNIQUE,
+    password TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+Artworks
+
+CREATE TABLE artworks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    title TEXT,
+    description TEXT,
+    file_url TEXT,
+    views INTEGER DEFAULT 0,
+    likes INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+Portfolios
+
+CREATE TABLE portfolios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    title TEXT,
+    description TEXT
+);
+Future Dashboard Metrics
+
+Each artist will see:
+
+Uploads count
+Total views
+Total likes
+Portfolio visits
+Followers
+Activity score
+Weekly performance graph
+Long-Term Features
+Drawing canvas for artwork
+House-plan design tools
+Video and audio uploads
+AI assistant bot
+Marketplace with M-Pesa integration
+Copyright verification
+Project portfolio builder
+
+When you've created the project and pushed it to GitHub, send me:
+
+A screenshot of VS Code, or
+The GitHub repository link,
+
+and I'll help you build the database and registration/login system next.
+
+Let's call it MHC that's megna home club 
+
+Good—MHC (Megna Home Club) is short, brandable, and easier to expand later.
+
+We’ll just update the structure and naming from here.
+
+📁 New Project Name
+
+MHC – Megna Home Club
+
+Suggested GitHub repo name:
+mhc-megna-home-club
+📂 Updated Project Structure
+mhc-megna-home-club/
+│
+├── client/
+│   ├── index.html
+│   ├── css/style.css
+│   ├── js/app.js
+│   └── assets/
+│
+├── server/
+│   ├── server.js
+│   ├── routes/
+│   ├── controllers/
+│   ├── models/
+│   └── uploads/
+│
+├── database/
+│   └── schema.sql
+│
+├── .gitignore
+├── package.json
+└── README.md
+⚙️ Update server title
+
+In server/server.js, change:
+
+app.get("/", (req, res) => {
+    res.send("MHC - Megna Home Club API Running");
+});
+🌐 Update homepage
+
+In client/index.html:
+
+<h1>Welcome to MHC - Megna Home Club</h1>
+<p>A platform for artists, designers, and creators to upload, design, and showcase work.</p>
+🚀 GitHub setup
+
+When pushing:
+
+git init
+git add .
+git commit -m "Initial MHC setup"
+git branch -M main
+git remote add origin https://github.com/yourusername/mhc-megna-home-club.git
+git push -u origin main
+🎯 What MHC will become (your vision, structured)
+Core Platform
+Artist uploads (image, video, audio)
+Portfolio builder
+Profile pages
+Creative Tools
+Drawing studio
+House plan designer
+Project builder
+Intelligence Layer
+AI assistant bot
+Auto tagging
+Content descriptions
+Analytics System
+Activity score
+Engagement tracking
+Performance dashboard
+👉 Next Step (important)
+
+Once your project is created in VS Code, tell me:
+
+“project ready” OR
+send GitHub link
+
+Then we’ll build:
+
+🔐 Step 1: Login + Registration system (real backend)
+bcrypt password hashing
+JWT authentication
+SQLite database connection
+First working API endpoints
+
+This is the point where MHC becomes a real platform, not just a static website.
