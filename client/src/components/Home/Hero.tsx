@@ -1,6 +1,11 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Hero() {
+  const { user } = useAuth();
+  const isAuthenticated = Boolean(user);
+
   return (
     <section className="min-h-screen flex items-center justify-center pt-24 px-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-5xl mx-auto text-center">
@@ -30,13 +35,28 @@ export default function Hero() {
           transition={{ delay: 0.6 }}
           className="mt-10 flex flex-wrap justify-center gap-5"
         >
-          <button className="bg-cyan-500 hover:bg-cyan-600 px-8 py-4 rounded-xl font-semibold">
-            Start Creating
-          </button>
+          {isAuthenticated ? (
+            <Link
+              to="/upload"
+              className="bg-cyan-500 hover:bg-cyan-600 px-8 py-4 rounded-xl font-semibold"
+            >
+              Start Creating
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="bg-cyan-500 hover:bg-cyan-600 px-8 py-4 rounded-xl font-semibold"
+            >
+              Login to Upload
+            </Link>
+          )}
 
-          <button className="border border-cyan-500 hover:bg-cyan-500/20 px-8 py-4 rounded-xl">
-            Explore Gallery
-          </button>
+          <Link
+            to="/marketplace"
+            className="border border-cyan-500 hover:bg-cyan-500/20 px-8 py-4 rounded-xl"
+          >
+            Explore Marketplace
+          </Link>
         </motion.div>
 
         <div className="mt-12 flex justify-center gap-10 text-center">
